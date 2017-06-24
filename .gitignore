@@ -1,0 +1,10 @@
+.softlockup_test.ko.cmd
+.softlockup_test.mod.o.cmd
+.softlockup_test.o.cmd
+.tmp_versions/
+Module.symvers
+modules.order
+loop
+*.o
+*.ko
+*.mod.*
