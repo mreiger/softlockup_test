@@ -11,3 +11,5 @@ changed by writing the values to the following proc filesystem files :
 
 * /proc/softlockup_test/softlockup_test_busy
 * /proc/softlockup_test/softlockup_test_main
+
+**WARING: ** This module can and probably will freeze your system, so be careful.
