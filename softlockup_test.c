@@ -11,6 +11,9 @@
 #include <linux/kthread.h>
 #include <linux/delay.h>
 #include <linux/proc_fs.h>
+#include <linux/uaccess.h>
+#include <linux/ktime.h>
+#include <linux/timekeeping.h>
 
 #define PROCFS_PARENT    "softlockup_test"
 #define PROCFS_BUSY_LOOP "softlockup_test_busy"
@@ -44,7 +47,7 @@ static struct file_operations file_main_ops = {
 
 int task(void *arg)
 {
-	struct timeval tv;
+	struct timespec64 tv;
 	time_t start;
 	time_t elapsed = 0;
 
@@ -52,7 +55,7 @@ int task(void *arg)
 	/* To generate panic uncomment following */
 	/* panic("softlockup: hung tasks"); */
 
-	do_gettimeofday(&tv);
+	ktime_get_real_ts64(&tv);
 	start = tv.tv_sec;
 	while(!kthread_should_stop()) {
 		printk(KERN_INFO "%s:%d\n",__func__,__LINE__);
@@ -61,11 +64,11 @@ int task(void *arg)
 		printk(KERN_INFO "%s:%d - Before\n",__func__,__LINE__);
 
 		for (;;) {
-			do_gettimeofday(&tv);
+			ktime_get_real_ts64(&tv);
 			elapsed = tv.tv_sec - start;
 			if (elapsed >= loop_seconds) {
 				printk(KERN_INFO "%s:%d - Timer Value (%d)\n",__func__,__LINE__, loop_seconds);
-				do_gettimeofday(&tv);
+				ktime_get_real_ts64(&tv);
 				start = tv.tv_sec;
 				printk(KERN_INFO "%s:%d - Reset Timer\n",__func__,__LINE__);
 				break;
@@ -73,7 +76,7 @@ int task(void *arg)
 		}
 
 		msleep(0);
-		printk(KERN_INFO "%s:%d - Elapsed: %ld\n",__func__,__LINE__, tv.tv_sec - start);
+		printk(KERN_INFO "%s:%d - Elapsed: %lld\n",__func__,__LINE__, tv.tv_sec - start);
 
 		printk(KERN_INFO "%s:%d - After\n",__func__,__LINE__);
 
@@ -93,7 +96,7 @@ static int softlockup_init(void)
 	main_seconds = 5000;
 	spin_lock_init(&spinlock);
 	task0 = kthread_run(&task,(void *)&val,"softlockup_thread");
-	set_cpus_allowed(task0, *cpumask_of(0));
+	set_cpus_allowed_ptr(task0, cpumask_of(0));
 
 	// Proc file system
 	proc_parent = proc_mkdir(PROCFS_PARENT, NULL);
