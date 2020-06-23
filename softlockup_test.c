@@ -76,7 +76,7 @@ int task(void *arg)
 		}
 
 		msleep(0);
-		printk(KERN_INFO "%s:%d - Elapsed: %lld\n",__func__,__LINE__, tv.tv_sec - start);
+		printk(KERN_INFO "%s:%d - Elapsed: %ld\n",__func__,__LINE__, tv.tv_sec - start);
 
 		printk(KERN_INFO "%s:%d - After\n",__func__,__LINE__);
 
@@ -148,11 +148,13 @@ static ssize_t procfile_read(struct file *file, char *buffer, size_t length, lof
 
 static ssize_t procfile_write(struct file *file, const char *buffer, size_t length, loff_t *offset)  
 {
+	int ignore;
+
 	printk(KERN_INFO "procfile_write (/proc/%s) called\n", PROCFS_BUSY_LOOP);
 	printk(KERN_INFO "procfs_write.length : %ld\n", length);
 
-	copy_from_user(msg, buffer, length);
-	kstrtoint(msg, 10, &loop_seconds);
+	ignore = copy_from_user(msg, buffer, length);
+	ignore = kstrtoint(msg, 10, &loop_seconds);
 	printk(KERN_INFO "Value : %d\n", loop_seconds);
 
 	return length;
@@ -161,12 +163,13 @@ static ssize_t procfile_write(struct file *file, const char *buffer, size_t leng
 static ssize_t procfile_write_main(struct file *file, const char *buffer, size_t length, loff_t *offset)  
 {
 	int aux;
+	int ignore;
 
 	printk(KERN_INFO "procfile_write (/proc/%s) called\n", PROCFS_MAIN_LOOP);
 	printk(KERN_INFO "procfs_write.length : %ld\n", length);
 
-	copy_from_user(msg, buffer, length);
-	kstrtoint(msg, 10, &aux);
+	ignore = copy_from_user(msg, buffer, length);
+	ignore = kstrtoint(msg, 10, &aux);
 	main_seconds = aux * 1000;
 	printk(KERN_INFO "Value : %d\n", main_seconds);
 
